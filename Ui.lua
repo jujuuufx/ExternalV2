@@ -24,14 +24,12 @@ local hex           = Color3.fromHex
 getgenv().External = getgenv().External or {}
 local External = getgenv().External
 
-getgenv().Library = External
-
 External.Directory    = "External"
 External.Folders      = {"/configs"}
 External.Flags        = {}
 External.ConfigFlags  = {}
 External.Connections  = {}
-External.DynamicTheming = {} -- Added to track dynamic toggle updates
+External.DynamicTheming = {} 
 External.Notifications= {Notifs = {}}
 External.__index      = External
 
@@ -39,21 +37,23 @@ local Flags          = External.Flags
 local ConfigFlags    = External.ConfigFlags
 local Notifications  = External.Notifications
 
+-- Upgraded Color Palette
 local themes = {
     preset = {
-        accent       = rgb(191, 0, 255),   
-        glow         = rgb(191, 0, 255),   
+        accent       = rgb(160, 32, 240),   
+        glow         = rgb(160, 32, 240),   
         
-        background   = rgb(20, 6, 34),      
-        section      = rgb(20, 20, 24),      
-        element      = rgb(28, 28, 32),     
+        background   = rgb(12, 12, 14),      -- Darker, sleeker main background
+        sidebar      = rgb(18, 18, 22),      -- Slightly lighter sidebar
+        section      = rgb(22, 22, 26),      -- Section boxes
+        element      = rgb(32, 32, 38),      -- Buttons/Inputs
         
-        outline      = rgb(35, 35, 40),      
-        text         = rgb(245, 245, 245),   
-        subtext      = rgb(140, 140, 145),  
+        outline      = rgb(45, 45, 52),      -- Clean borders
+        text         = rgb(255, 255, 255),   
+        subtext      = rgb(160, 160, 170),  
         
-        tab_active   = rgb(105, 17, 219),   
-        tab_inactive = rgb(16, 16, 19), 
+        tab_active   = rgb(255, 255, 255),   -- Active tab text/icon color
+        tab_inactive = rgb(120, 120, 130),   -- Inactive tab text/icon color
     },
     utility = {}
 }
@@ -77,10 +77,10 @@ for _, path in External.Folders do
     pcall(function() makefolder(External.Directory .. path) end)
 end
 
--- misc helpers ok 
+-- misc helpers
 function External:Tween(Object, Properties, Info)
     if not Object then return end
-    local tween = TweenService:Create(Object, Info or TweenInfo.new(0.25, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), Properties)
+    local tween = TweenService:Create(Object, Info or TweenInfo.new(0.3, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), Properties)
     tween:Play()
     return tween
 end
@@ -105,27 +105,25 @@ function External:RefreshTheme(theme, color3)
             object[property] = color3
         end
     end
-    -- Dynamically update Toggles when you change colors
     for _, updateFunc in ipairs(External.DynamicTheming) do
         updateFunc()
     end
 end
 
 function External:Resizify(Parent)
-    local UIS = game:GetService("UserInputService")
     local Resizing = External:Create("TextButton", {
         AnchorPoint = vec2(1, 1), Position = dim2(1, 0, 1, 0), Size = dim2(0, 20, 0, 20),
         BorderSizePixel = 0, BackgroundTransparency = 1, Text = "", Parent = Parent, ZIndex = 999,
     })
     
     local grip = External:Create("ImageLabel", {
-        Parent = Resizing, AnchorPoint = vec2(1, 1), Position = dim2(1, -4, 1, -4), Size = dim2(0, 10, 0, 10),
+        Parent = Resizing, AnchorPoint = vec2(1, 1), Position = dim2(1, -6, 1, -6), Size = dim2(0, 10, 0, 10),
         BackgroundTransparency = 1, Image = "rbxthumb://type=Asset&id=6153965706&w=150&h=150", ImageColor3 = themes.preset.subtext, ImageTransparency = 0.5
     })
 
     local IsResizing, StartInputPos, StartSize = false, nil, nil
-    local MIN_SIZE = vec2(600, 450)
-    local MAX_SIZE = vec2(1000, 800)
+    local MIN_SIZE = vec2(700, 480)
+    local MAX_SIZE = vec2(1200, 900)
 
     Resizing.InputBegan:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
@@ -135,7 +133,7 @@ function External:Resizify(Parent)
     Resizing.InputEnded:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then IsResizing = false end
     end)
-    UIS.InputChanged:Connect(function(input)
+    InputService.InputChanged:Connect(function(input)
         if not IsResizing then return end
         if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
             local delta = input.Position - StartInputPos
@@ -144,12 +142,12 @@ function External:Resizify(Parent)
     end)
 end
 
--- window hahaa
+-- window
 function External:Window(properties)
     local Cfg = {
         Title = properties.Title or properties.title or properties.Prefix or "External", 
         Subtitle = properties.Subtitle or properties.subtitle or properties.Suffix or ".cc",
-        Size = properties.Size or properties.size or dim2(0, 720, 0, 500), 
+        Size = properties.Size or properties.size or dim2(0, 800, 0, 520), 
         TabInfo = nil, Items = {}, Tweening = false, IsSwitchingTab = false;
     }
 
@@ -168,105 +166,92 @@ function External:Window(properties)
         Size = Cfg.Size, BackgroundTransparency = 1, BorderSizePixel = 0
     })
     
-    -- Exact User Provided Glow snippet
     Items.Glow = External:Create("ImageLabel", {
-        ImageColor3 = themes.preset.glow,
-        ScaleType = Enum.ScaleType.Slice,
-        ImageTransparency = 0.6499999761581421,
-        BorderColor3 = rgb(0, 0, 0),
-        Parent = Items.Wrapper,
-        Name = "\0",
-        Size = dim2(1, 40, 1, 40),
-        Image = "rbxassetid://18245826428",
-        BackgroundTransparency = 1,
-        Position = dim2(0, -20, 0, -20),
-        BackgroundColor3 = rgb(255, 255, 255),
-        BorderSizePixel = 0,
-        SliceCenter = rect(vec2(21, 21), vec2(79, 79)),
-        ZIndex = 0
+        ImageColor3 = themes.preset.glow, ScaleType = Enum.ScaleType.Slice, ImageTransparency = 0.6,
+        Parent = Items.Wrapper, Size = dim2(1, 40, 1, 40), Image = "rbxassetid://18245826428",
+        BackgroundTransparency = 1, Position = dim2(0, -20, 0, -20), BorderSizePixel = 0,
+        SliceCenter = rect(vec2(21, 21), vec2(79, 79)), ZIndex = 0
     })
     External:Themify(Items.Glow, "glow", "ImageColor3")
 
+    -- Main background container
     Items.Window = External:Create("Frame", {
-        Parent = Items.Wrapper, Position = dim2(0, 0, 0, 0), Size = dim2(1, 0, 1, 0),
-        BackgroundColor3 = themes.preset.background, BorderSizePixel = 0, ZIndex = 1, ClipsDescendants = true
+        Parent = Items.Wrapper, Size = dim2(1, 0, 1, 0), BackgroundColor3 = themes.preset.background, BorderSizePixel = 0, ZIndex = 1
     })
     External:Themify(Items.Window, "background", "BackgroundColor3")
-    External:Create("UICorner", { Parent = Items.Window, CornerRadius = dim(0, 6) })
+    External:Create("UICorner", { Parent = Items.Window, CornerRadius = dim(0, 8) })
     External:Themify(External:Create("UIStroke", { Parent = Items.Window, Color = themes.preset.outline, Thickness = 1 }), "outline", "Color")
 
-    Items.Header = External:Create("Frame", { Parent = Items.Window, Size = dim2(1, 0, 0, 50), BackgroundTransparency = 1, Active = true, ZIndex = 2 })
+    -- SIDEBAR (Left Navigation)
+    Items.Sidebar = External:Create("Frame", {
+        Parent = Items.Window, Size = dim2(0, 200, 1, 0), BackgroundColor3 = themes.preset.sidebar, BorderSizePixel = 0, ZIndex = 2, ClipsDescendants = true
+    })
+    External:Themify(Items.Sidebar, "sidebar", "BackgroundColor3")
+    External:Create("UICorner", { Parent = Items.Sidebar, CornerRadius = dim(0, 8) })
+    
+    -- Fix corner rounding overlaying the main frame
+    Items.SidebarBlocker = External:Create("Frame", {
+        Parent = Items.Sidebar, AnchorPoint = vec2(1, 0), Position = dim2(1, 0, 0, 0), Size = dim2(0, 8, 1, 0), 
+        BackgroundColor3 = themes.preset.sidebar, BorderSizePixel = 0, ZIndex = 2
+    })
+    External:Themify(Items.SidebarBlocker, "sidebar", "BackgroundColor3")
+    External:Themify(External:Create("UIStroke", { Parent = Items.Sidebar, Color = themes.preset.outline, Thickness = 1 }), "outline", "Color")
 
-    Items.LogoBlock = External:Create("Frame", {
-    Parent = Items.Header, 
-    AnchorPoint = vec2(0, 0.5), 
-    Position = dim2(0, 20, 0.5, 0), 
-    Size = dim2(0, 20, 0, 20),
-    BackgroundTransparency = 1,
-    BorderSizePixel = 0,
-    ZIndex = 4
-})
-    External:Create("UICorner", { Parent = Items.LogoBlock, CornerRadius = dim(0, 4) })
+    -- Sidebar Header (Logo)
+    Items.SideHeader = External:Create("Frame", { Parent = Items.Sidebar, Size = dim2(1, 0, 0, 70), BackgroundTransparency = 1, Active = true, ZIndex = 4 })
+    
+    Items.LogoBlock = External:Create("Frame", { Parent = Items.SideHeader, AnchorPoint = vec2(0, 0.5), Position = dim2(0, 20, 0.5, 0), Size = dim2(0, 24, 0, 24), BackgroundTransparency = 1, BorderSizePixel = 0, ZIndex = 4 })
+    External:Create("UICorner", { Parent = Items.LogoBlock, CornerRadius = dim(0, 6) })
     External:Themify(Items.LogoBlock, "accent", "BackgroundColor3")
 
     Items.LogoText = External:Create("TextLabel", {
-        Parent = Items.Header, Text = Cfg.Title, TextColor3 = themes.preset.text,
-        AnchorPoint = vec2(0, 0), Position = dim2(0, 20, 0, 12), -- Changed X from 50 to 20
-        Size = dim2(0, 0, 0, 14), AutomaticSize = Enum.AutomaticSize.X,
-        BackgroundTransparency = 1, FontFace = Font.new("rbxassetid://12187365364", Enum.FontWeight.SemiBold), TextSize = 13, TextXAlignment = Enum.TextXAlignment.Left, ZIndex = 4
+        Parent = Items.SideHeader, Text = Cfg.Title, TextColor3 = themes.preset.text, AnchorPoint = vec2(0, 0), Position = dim2(0, 54, 0, 20), Size = dim2(0, 0, 0, 16), AutomaticSize = Enum.AutomaticSize.X,
+        BackgroundTransparency = 1, FontFace = Font.new("rbxassetid://12187365364", Enum.FontWeight.Bold), TextSize = 15, TextXAlignment = Enum.TextXAlignment.Left, ZIndex = 4
     })
     External:Themify(Items.LogoText, "text", "TextColor3")
 
     Items.SubLogoText = External:Create("TextLabel", {
-        Parent = Items.Header, Text = Cfg.Subtitle, TextColor3 = themes.preset.subtext,
-        AnchorPoint = vec2(0, 0), Position = dim2(0, 20, 0, 26), -- Changed X from 50 to 20
-        Size = dim2(0, 0, 0, 12), AutomaticSize = Enum.AutomaticSize.X,
-        BackgroundTransparency = 1, FontFace = Font.new("rbxassetid://12187365364", Enum.FontWeight.Medium), TextSize = 11, TextXAlignment = Enum.TextXAlignment.Left, ZIndex = 4
+        Parent = Items.SideHeader, Text = Cfg.Subtitle, TextColor3 = themes.preset.accent, AnchorPoint = vec2(0, 0), Position = dim2(0, 54, 0, 36), Size = dim2(0, 0, 0, 12), AutomaticSize = Enum.AutomaticSize.X,
+        BackgroundTransparency = 1, FontFace = Font.new("rbxassetid://12187365364", Enum.FontWeight.SemiBold), TextSize = 11, TextXAlignment = Enum.TextXAlignment.Left, ZIndex = 4
     })
-    External:Themify(Items.SubLogoText, "subtext", "TextColor3")
+    External:Themify(Items.SubLogoText, "accent", "TextColor3")
 
-    Items.TabHolder = External:Create("Frame", { 
-        Parent = Items.Header, AnchorPoint = vec2(1, 0.5), Position = dim2(1, -20, 0.5, 0),
-        Size = dim2(1, -200, 1, 0), BackgroundTransparency = 1, ZIndex = 4
+    -- Tab Holder in Sidebar
+    Items.TabHolder = External:Create("ScrollingFrame", { 
+        Parent = Items.Sidebar, Position = dim2(0, 0, 0, 75), Size = dim2(1, 0, 1, -145), 
+        BackgroundTransparency = 1, ScrollBarThickness = 0, ZIndex = 4 
     })
-    External:Create("UIListLayout", { Parent = Items.TabHolder, FillDirection = Enum.FillDirection.Horizontal, HorizontalAlignment = Enum.HorizontalAlignment.Right, VerticalAlignment = Enum.VerticalAlignment.Center, Padding = dim(0, 8) })
+    External:Create("UIListLayout", { Parent = Items.TabHolder, Padding = dim(0, 4), HorizontalAlignment = Enum.HorizontalAlignment.Center })
+    External:Create("UIPadding", { Parent = Items.TabHolder, PaddingTop = dim(0, 5), PaddingLeft = dim(0, 12), PaddingRight = dim(0, 12) })
 
+    -- Sidebar Footer
     Items.Footer = External:Create("Frame", { 
-        Parent = Items.Window, AnchorPoint = vec2(0, 1), Position = dim2(0, 0, 1, 0), 
-        Size = dim2(1, 0, 0, 55), BackgroundTransparency = 1, BorderSizePixel = 0, ZIndex = 2 
+        Parent = Items.Sidebar, AnchorPoint = vec2(0, 1), Position = dim2(0, 0, 1, 0), 
+        Size = dim2(1, 0, 0, 70), BackgroundTransparency = 1, BorderSizePixel = 0, ZIndex = 4 
     })
-
-    local headshot = "rbxthumb://type=AvatarHeadShot&id="..lp.UserId.."&w=48&h=48"
-    Items.AvatarFrame = External:Create("Frame", {
-        Parent = Items.Footer, AnchorPoint = vec2(0, 0.5), Position = dim2(0, 20, 0.5, 0), 
-        Size = dim2(0, 28, 0, 28), BackgroundColor3 = themes.preset.element, BorderSizePixel = 0, ZIndex = 5
-    })
-    External:Themify(Items.AvatarFrame, "element", "BackgroundColor3")
-    External:Create("UICorner", { Parent = Items.AvatarFrame, CornerRadius = dim(0, 6) })
     
-    Items.Avatar = External:Create("ImageLabel", { 
-        Parent = Items.AvatarFrame, AnchorPoint = vec2(0.5, 0.5), Position = dim2(0.5, 0, 0.5, 0), 
-        Size = dim2(1, 0, 1, 0), BackgroundTransparency = 1, Image = headshot, ZIndex = 6 
-    })
-    External:Create("UICorner", { Parent = Items.Avatar, CornerRadius = dim(0, 6) })
+    local headshot = "rbxthumb://type=AvatarHeadShot&id="..lp.UserId.."&w=48&h=48"
+    Items.AvatarFrame = External:Create("Frame", { Parent = Items.Footer, AnchorPoint = vec2(0, 0.5), Position = dim2(0, 20, 0.5, 0), Size = dim2(0, 32, 0, 32), BackgroundColor3 = themes.preset.element, BorderSizePixel = 0, ZIndex = 5 })
+    External:Themify(Items.AvatarFrame, "element", "BackgroundColor3")
+    External:Create("UICorner", { Parent = Items.AvatarFrame, CornerRadius = dim(0, 8) })
+    
+    Items.Avatar = External:Create("ImageLabel", { Parent = Items.AvatarFrame, AnchorPoint = vec2(0.5, 0.5), Position = dim2(0.5, 0, 0.5, 0), Size = dim2(1, 0, 1, 0), BackgroundTransparency = 1, Image = headshot, ZIndex = 6 })
+    External:Create("UICorner", { Parent = Items.Avatar, CornerRadius = dim(0, 8) })
 
     Items.Username = External:Create("TextLabel", {
-        Parent = Items.Footer, Text = lp.Name, TextColor3 = themes.preset.text,
-        AnchorPoint = vec2(0, 0), Position = dim2(0, 58, 0, 13), Size = dim2(0, 200, 0, 14),
-        BackgroundTransparency = 1, FontFace = Font.new("rbxassetid://12187365364", Enum.FontWeight.Medium), TextSize = 13, TextXAlignment = Enum.TextXAlignment.Left, ZIndex = 5
+        Parent = Items.Footer, Text = lp.Name, TextColor3 = themes.preset.text, AnchorPoint = vec2(0, 0), Position = dim2(0, 62, 0, 20), Size = dim2(0, 100, 0, 14),
+        BackgroundTransparency = 1, FontFace = Font.new("rbxassetid://12187365364", Enum.FontWeight.SemiBold), TextSize = 13, TextXAlignment = Enum.TextXAlignment.Left, ZIndex = 5
     })
     External:Themify(Items.Username, "text", "TextColor3")
 
     Items.Status = External:Create("TextLabel", {
-        Parent = Items.Footer, Text = "Status : Premium", TextColor3 = themes.preset.subtext,
-        AnchorPoint = vec2(0, 0), Position = dim2(0, 58, 0, 28), Size = dim2(0, 200, 0, 12),
+        Parent = Items.Footer, Text = "Status : Premium", TextColor3 = themes.preset.subtext, AnchorPoint = vec2(0, 0), Position = dim2(0, 62, 0, 36), Size = dim2(0, 100, 0, 12),
         BackgroundTransparency = 1, FontFace = Font.new("rbxassetid://12187365364", Enum.FontWeight.Medium), TextSize = 11, TextXAlignment = Enum.TextXAlignment.Left, ZIndex = 5
     })
     External:Themify(Items.Status, "subtext", "TextColor3")
 
     Items.SettingsBtn = External:Create("ImageButton", {
-        Parent = Items.Footer, AnchorPoint = vec2(1, 0.5), Position = dim2(1, -25, 0.5, 0),
-        Size = dim2(0, 16, 0, 16), BackgroundTransparency = 1, Image = "rbxassetid://11293977610", ImageColor3 = themes.preset.subtext, ZIndex = 5
+        Parent = Items.Footer, AnchorPoint = vec2(1, 0.5), Position = dim2(1, -20, 0.5, 0), Size = dim2(0, 18, 0, 18), BackgroundTransparency = 1, Image = "rbxassetid://11293977610", ImageColor3 = themes.preset.subtext, ZIndex = 5
     })
     External:Themify(Items.SettingsBtn, "subtext", "ImageColor3")
     
@@ -274,21 +259,34 @@ function External:Window(properties)
         if Cfg.SettingsTabOpen then Cfg.SettingsTabOpen() end
     end)
 
-    Items.PageHolder = External:Create("Frame", { 
-        Parent = Items.Window, Position = dim2(0, 0, 0, 50), Size = dim2(1, 0, 1, -105), 
-        BackgroundTransparency = 1, ClipsDescendants = true 
+    -- MAIN CONTENT AREA
+    Items.MainContent = External:Create("Frame", {
+        Parent = Items.Window, Position = dim2(0, 200, 0, 0), Size = dim2(1, -200, 1, 0), BackgroundTransparency = 1, ZIndex = 2
     })
 
-    -- Dragging Logic
+    -- Drag areas
     local Dragging, DragInput, DragStart, StartPos
-    Items.Header.InputBegan:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-            Dragging = true; DragStart = input.Position; StartPos = Items.Wrapper.Position
-        end
-    end)
-    Items.Header.InputEnded:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then Dragging = false end
-    end)
+    local function initDrag(element)
+        element.InputBegan:Connect(function(input)
+            if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+                Dragging = true; DragStart = input.Position; StartPos = Items.Wrapper.Position
+            end
+        end)
+        element.InputEnded:Connect(function(input)
+            if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then Dragging = false end
+        end)
+    end
+    initDrag(Items.SideHeader)
+    
+    Items.ContentHeader = External:Create("Frame", { Parent = Items.MainContent, Size = dim2(1, 0, 0, 70), BackgroundTransparency = 1, Active = true })
+    initDrag(Items.ContentHeader)
+
+    Items.CurrentTabTitle = External:Create("TextLabel", {
+        Parent = Items.ContentHeader, Text = "Dashboard", TextColor3 = themes.preset.text, AnchorPoint = vec2(0, 0.5), Position = dim2(0, 30, 0.5, 0), Size = dim2(0.5, 0, 0, 24),
+        BackgroundTransparency = 1, FontFace = Font.new("rbxassetid://12187365364", Enum.FontWeight.Bold), TextSize = 22, TextXAlignment = Enum.TextXAlignment.Left
+    })
+    External:Themify(Items.CurrentTabTitle, "text", "TextColor3")
+
     InputService.InputChanged:Connect(function(input)
         if Dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
             local delta = input.Position - DragStart
@@ -296,6 +294,10 @@ function External:Window(properties)
         end
     end)
     External:Resizify(Items.Wrapper)
+
+    Items.PageHolder = External:Create("Frame", { 
+        Parent = Items.MainContent, Position = dim2(0, 0, 0, 70), Size = dim2(1, 0, 1, -70), BackgroundTransparency = 1, ClipsDescendants = true 
+    })
 
     function Cfg.ToggleMenu(bool)
         if Cfg.Tweening then return end
@@ -306,11 +308,11 @@ function External:Window(properties)
     if InputService.TouchEnabled then
         External.ToggleGui = External:Create("ScreenGui", { Parent = CoreGui, Name = "ExternalToggle", IgnoreGuiInset = true })
         local ToggleButton = External:Create("ImageButton", {
-            Name = "ToggleButton", Parent = External.ToggleGui, Position = UDim2.new(1, -80, 0, 150), Size = UDim2.new(0, 55, 0, 55),
-            BackgroundTransparency = 0.2, BackgroundColor3 = themes.preset.element, Image = "rbxassetid://99047291822954", ZIndex = 10000,
+            Name = "ToggleButton", Parent = External.ToggleGui, Position = UDim2.new(1, -80, 0, 150), Size = UDim2.new(0, 50, 0, 50),
+            BackgroundTransparency = 0.2, BackgroundColor3 = themes.preset.sidebar, Image = "rbxassetid://99047291822954", ZIndex = 10000,
         })
-        External:Create("UICorner", { Parent = ToggleButton, CornerRadius = dim(0, 12) })
-        External:Themify(ToggleButton, "element", "BackgroundColor3")
+        External:Create("UICorner", { Parent = ToggleButton, CornerRadius = dim(1, 0) })
+        External:Themify(ToggleButton, "sidebar", "BackgroundColor3")
         External:Themify(External:Create("UIStroke", { Parent = ToggleButton, Color = themes.preset.outline, Thickness = 1.5 }), "outline", "Color")
 
         local isTDrag, tDragStart, tStartPos, hasTDragged = false, nil, nil, false
@@ -335,11 +337,11 @@ function External:Window(properties)
     return setmetatable(Cfg, External)
 end
 
--- tabs okk :joy:
+-- tabs
 function External:Tab(properties)
     local Cfg = { 
         Name = properties.Name or properties.name or "Tab", 
-        Icon = properties.Icon or properties.icon or "rbxassetid://11293977610", 
+        Icon = properties.Icon or properties.icon or "11293977610", 
         Hidden = properties.Hidden or properties.hidden or false, 
         Items = {} 
     }
@@ -348,38 +350,48 @@ function External:Tab(properties)
 
     if not Cfg.Hidden then
         Items.Button = External:Create("TextButton", { 
-            Parent = self.Items.TabHolder, Size = dim2(0, 30, 0, 30), 
-            BackgroundColor3 = themes.preset.tab_active, -- Tweened later
-            BackgroundTransparency = 1, -- Start transparent (no background box)
-            Text = "", AutoButtonColor = false, ZIndex = 5 
+            Parent = self.Items.TabHolder, Size = dim2(1, 0, 0, 36), BackgroundColor3 = themes.preset.element, 
+            BackgroundTransparency = 1, Text = "", AutoButtonColor = false, ZIndex = 5 
         })
-        External:Themify(Items.Button, "tab_active", "BackgroundColor3")
+        External:Themify(Items.Button, "element", "BackgroundColor3")
         External:Create("UICorner", { Parent = Items.Button, CornerRadius = dim(0, 6) })
         
-        Items.IconImg = External:Create("ImageLabel", { 
-            Parent = Items.Button, AnchorPoint = vec2(0.5, 0.5), Position = dim2(0.5, 0, 0.5, 0),
-            Size = dim2(0, 16, 0, 16), BackgroundTransparency = 1, 
-            Image = Cfg.Icon, ImageColor3 = themes.preset.subtext, ZIndex = 6 
+        Items.Indicator = External:Create("Frame", {
+            Parent = Items.Button, AnchorPoint = vec2(0, 0.5), Position = dim2(0, -6, 0.5, 0), Size = dim2(0, 3, 0, 16),
+            BackgroundColor3 = themes.preset.accent, BorderSizePixel = 0, BackgroundTransparency = 1
         })
-        External:Themify(Items.IconImg, "subtext", "ImageColor3")
+        External:Themify(Items.Indicator, "accent", "BackgroundColor3")
+        External:Create("UICorner", { Parent = Items.Indicator, CornerRadius = dim(1, 0) })
+
+        Items.IconImg = External:Create("ImageLabel", { 
+            Parent = Items.Button, AnchorPoint = vec2(0, 0.5), Position = dim2(0, 12, 0.5, 0),
+            Size = dim2(0, 16, 0, 16), BackgroundTransparency = 1, Image = Cfg.Icon, ImageColor3 = themes.preset.tab_inactive, ZIndex = 6 
+        })
+        External:Themify(Items.IconImg, "tab_inactive", "ImageColor3")
+
+        Items.Title = External:Create("TextLabel", {
+            Parent = Items.Button, AnchorPoint = vec2(0, 0.5), Position = dim2(0, 38, 0.5, 0), Size = dim2(1, -45, 1, 0),
+            BackgroundTransparency = 1, Text = Cfg.Name, TextColor3 = themes.preset.tab_inactive, FontFace = Font.new("rbxassetid://12187365364", Enum.FontWeight.SemiBold), TextSize = 13, TextXAlignment = Enum.TextXAlignment.Left, ZIndex = 6
+        })
+        External:Themify(Items.Title, "tab_inactive", "TextColor3")
     end
 
     Items.Pages = External:Create("CanvasGroup", { Parent = External.Other, Size = dim2(1, 0, 1, 0), BackgroundTransparency = 1, Visible = false, GroupTransparency = 1 })
-    External:Create("UIListLayout", { Parent = Items.Pages, FillDirection = Enum.FillDirection.Horizontal, Padding = dim(0, 14) })
-    External:Create("UIPadding", { Parent = Items.Pages, PaddingTop = dim(0, 10), PaddingBottom = dim(0, 10), PaddingRight = dim(0, 20), PaddingLeft = dim(0, 20) })
+    External:Create("UIListLayout", { Parent = Items.Pages, FillDirection = Enum.FillDirection.Horizontal, Padding = dim(0, 20) })
+    External:Create("UIPadding", { Parent = Items.Pages, PaddingTop = dim(0, 5), PaddingBottom = dim(0, 20), PaddingRight = dim(0, 30), PaddingLeft = dim(0, 30) })
 
     Items.Left = External:Create("ScrollingFrame", { 
-        Parent = Items.Pages, Size = dim2(0.5, -7, 1, 0), BackgroundTransparency = 1, 
+        Parent = Items.Pages, Size = dim2(0.5, -10, 1, 0), BackgroundTransparency = 1, 
         ScrollBarThickness = 0, CanvasSize = dim2(0, 0, 0, 0), AutomaticCanvasSize = Enum.AutomaticSize.Y
     })
-    External:Create("UIListLayout", { Parent = Items.Left, Padding = dim(0, 14) })
+    External:Create("UIListLayout", { Parent = Items.Left, Padding = dim(0, 16) })
     External:Create("UIPadding", { Parent = Items.Left, PaddingBottom = dim(0, 10) })
 
     Items.Right = External:Create("ScrollingFrame", { 
-        Parent = Items.Pages, Size = dim2(0.5, -7, 1, 0), BackgroundTransparency = 1, 
+        Parent = Items.Pages, Size = dim2(0.5, -10, 1, 0), BackgroundTransparency = 1, 
         ScrollBarThickness = 0, CanvasSize = dim2(0, 0, 0, 0), AutomaticCanvasSize = Enum.AutomaticSize.Y
     })
-    External:Create("UIListLayout", { Parent = Items.Right, Padding = dim(0, 14) })
+    External:Create("UIListLayout", { Parent = Items.Right, Padding = dim(0, 16) })
     External:Create("UIPadding", { Parent = Items.Right, PaddingBottom = dim(0, 10) })
 
     function Cfg.OpenTab()
@@ -388,33 +400,44 @@ function External:Tab(properties)
         self.IsSwitchingTab = true
         self.TabInfo = Cfg.Items
 
-        local buttonTween = TweenInfo.new(0.25, Enum.EasingStyle.Quint, Enum.EasingDirection.Out)
+        if not Cfg.Hidden then
+            self.Items.CurrentTabTitle.Text = Cfg.Name
+            External:Tween(self.Items.CurrentTabTitle, {TextTransparency = 0}, TweenInfo.new(0.3))
+        else
+            self.Items.CurrentTabTitle.Text = "Settings"
+        end
+
+        local buttonTween = TweenInfo.new(0.3, Enum.EasingStyle.Quint, Enum.EasingDirection.Out)
 
         if oldTab and oldTab.Button then
             External:Tween(oldTab.Button, {BackgroundTransparency = 1}, buttonTween)
-            External:Tween(oldTab.IconImg, {ImageColor3 = themes.preset.subtext}, buttonTween)
+            External:Tween(oldTab.IconImg, {ImageColor3 = themes.preset.tab_inactive}, buttonTween)
+            External:Tween(oldTab.Title, {TextColor3 = themes.preset.tab_inactive}, buttonTween)
+            External:Tween(oldTab.Indicator, {Position = dim2(0, -6, 0.5, 0), BackgroundTransparency = 1}, buttonTween)
         end
 
         if Items.Button then 
-            External:Tween(Items.Button, {BackgroundTransparency = 0}, buttonTween)
-            External:Tween(Items.IconImg, {ImageColor3 = rgb(15, 15, 15)}, buttonTween) 
+            External:Tween(Items.Button, {BackgroundTransparency = 0.5}, buttonTween)
+            External:Tween(Items.IconImg, {ImageColor3 = themes.preset.tab_active}, buttonTween) 
+            External:Tween(Items.Title, {TextColor3 = themes.preset.tab_active}, buttonTween) 
+            External:Tween(Items.Indicator, {Position = dim2(0, 4, 0.5, 0), BackgroundTransparency = 0}, buttonTween)
         end
         
         task.spawn(function()
             if oldTab then
-                External:Tween(oldTab.Pages, {GroupTransparency = 1, Position = dim2(0, 0, 0, 10)}, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out))
-                task.wait(0.2)
+                External:Tween(oldTab.Pages, {GroupTransparency = 1, Position = dim2(0, 0, 0, 15)}, TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out))
+                task.wait(0.25)
                 oldTab.Pages.Visible = false
                 oldTab.Pages.Parent = External.Other
             end
 
-            Items.Pages.Position = dim2(0, 0, 0, 10) 
+            Items.Pages.Position = dim2(0, 0, 0, 15) 
             Items.Pages.GroupTransparency = 1
             Items.Pages.Parent = self.Items.PageHolder
             Items.Pages.Visible = true
 
-            External:Tween(Items.Pages, {GroupTransparency = 0, Position = dim2(0, 0, 0, 0)}, TweenInfo.new(0.35, Enum.EasingStyle.Quart, Enum.EasingDirection.Out))
-            task.wait(0.35)
+            External:Tween(Items.Pages, {GroupTransparency = 0, Position = dim2(0, 0, 0, 0)}, TweenInfo.new(0.4, Enum.EasingStyle.Quart, Enum.EasingDirection.Out))
+            task.wait(0.4)
             
             Items.Pages.GroupTransparency = 0 
             self.IsSwitchingTab = false
@@ -426,13 +449,11 @@ function External:Tab(properties)
     return setmetatable(Cfg, External)
 end
 
--- sections okk
+-- sections
 function External:Section(properties)
     local Cfg = { 
         Name = properties.Name or properties.name or "Section", 
         Side = properties.Side or properties.side or "Left", 
-        Icon = properties.Icon or properties.icon or "rbxassetid://11293977610", -- Default shield
-        RightIcon = properties.RightIcon or properties.righticon or "rbxassetid://11293977610", -- Default chevron/gear
         Items = {} 
     }
     Cfg.Side = (Cfg.Side:lower() == "right") and "Right" or "Left"
@@ -443,47 +464,35 @@ function External:Section(properties)
         BackgroundColor3 = themes.preset.section, BorderSizePixel = 0, ClipsDescendants = true 
     })
     External:Themify(Items.Section, "section", "BackgroundColor3")
-    External:Create("UICorner", { Parent = Items.Section, CornerRadius = dim(0, 6) })
+    External:Create("UICorner", { Parent = Items.Section, CornerRadius = dim(0, 8) })
+    External:Themify(External:Create("UIStroke", { Parent = Items.Section, Color = themes.preset.outline, Thickness = 1 }), "outline", "Color")
 
-    -- THE RED LINE ACCENT ON LEFT SIDE
-    Items.AccentLine = External:Create("Frame", {
-        Parent = Items.Section, Size = dim2(0, 2, 1, 0), Position = dim2(0, 0, 0, 0),
-        BackgroundColor3 = themes.preset.accent, BorderSizePixel = 0, ZIndex = 2
-    })
-    External:Themify(Items.AccentLine, "accent", "BackgroundColor3")
-
-    Items.Header = External:Create("Frame", { Parent = Items.Section, Size = dim2(1, 0, 0, 36), BackgroundTransparency = 1 })
-    
-    Items.Icon = External:Create("ImageLabel", {
-        Parent = Items.Header, Position = dim2(0, 16, 0.5, 0), AnchorPoint = vec2(0, 0.5), Size = dim2(0, 14, 0, 14),
-        BackgroundTransparency = 1, Image = Cfg.Icon, ImageColor3 = themes.preset.subtext
-    })
-    External:Themify(Items.Icon, "subtext", "ImageColor3")
+    Items.Header = External:Create("Frame", { Parent = Items.Section, Size = dim2(1, 0, 0, 42), BackgroundTransparency = 1 })
 
     Items.Title = External:Create("TextLabel", { 
-        Parent = Items.Header, Position = dim2(0, 38, 0.5, 0), AnchorPoint = vec2(0, 0.5), Size = dim2(1, -70, 0, 14), 
-        BackgroundTransparency = 1, Text = Cfg.Name, TextColor3 = themes.preset.text, FontFace = Font.new("rbxassetid://12187365364", Enum.FontWeight.SemiBold), TextSize = 13, TextXAlignment = Enum.TextXAlignment.Left 
+        Parent = Items.Header, Position = dim2(0, 16, 0.5, 0), AnchorPoint = vec2(0, 0.5), Size = dim2(1, -32, 0, 14), 
+        BackgroundTransparency = 1, Text = Cfg.Name, TextColor3 = themes.preset.text, FontFace = Font.new("rbxassetid://12187365364", Enum.FontWeight.SemiBold), TextSize = 14, TextXAlignment = Enum.TextXAlignment.Left 
     })
     External:Themify(Items.Title, "text", "TextColor3")
 
-    Items.Chevron = External:Create("ImageLabel", {
-        Parent = Items.Header, Position = dim2(1, -14, 0.5, 0), AnchorPoint = vec2(1, 0.5), Size = dim2(0, 12, 0, 12),
-        BackgroundTransparency = 1, Image = Cfg.RightIcon, ImageColor3 = themes.preset.subtext, 
-        Rotation = (Cfg.RightIcon == "rbxassetid://11293977610") and 180 or 0 -- Rotate if it's the chevron, keep upright if custom gear
+    -- Subtle divider line
+    Items.Divider = External:Create("Frame", {
+        Parent = Items.Header, AnchorPoint = vec2(0, 1), Position = dim2(0, 16, 1, 0), Size = dim2(1, -32, 0, 1),
+        BackgroundColor3 = themes.preset.outline, BorderSizePixel = 0
     })
-    External:Themify(Items.Chevron, "subtext", "ImageColor3")
+    External:Themify(Items.Divider, "outline", "BackgroundColor3")
 
     Items.Container = External:Create("Frame", { 
-        Parent = Items.Section, Position = dim2(0, 0, 0, 36), Size = dim2(1, 0, 0, 0), 
+        Parent = Items.Section, Position = dim2(0, 0, 0, 42), Size = dim2(1, 0, 0, 0), 
         AutomaticSize = Enum.AutomaticSize.Y, BackgroundTransparency = 1 
     })
-    External:Create("UIListLayout", { Parent = Items.Container, Padding = dim(0, 6), SortOrder = Enum.SortOrder.LayoutOrder })
-    External:Create("UIPadding", { Parent = Items.Container, PaddingBottom = dim(0, 12), PaddingLeft = dim(0, 14), PaddingRight = dim(0, 14) })
+    External:Create("UIListLayout", { Parent = Items.Container, Padding = dim(0, 8), SortOrder = Enum.SortOrder.LayoutOrder })
+    External:Create("UIPadding", { Parent = Items.Container, PaddingTop = dim(0, 12), PaddingBottom = dim(0, 16), PaddingLeft = dim(0, 16), PaddingRight = dim(0, 16) })
 
     return setmetatable(Cfg, External)
 end
 
--- elements okk
+-- elements
 function External:Toggle(properties)
     local Cfg = { 
         Name = properties.Name or properties.name or "Toggle", 
@@ -494,31 +503,42 @@ function External:Toggle(properties)
     }
     local Items = Cfg.Items
 
-    Items.Button = External:Create("TextButton", { Parent = self.Items.Container, Size = dim2(1, 0, 0, 22), BackgroundTransparency = 1, Text = "" })
+    Items.Button = External:Create("TextButton", { Parent = self.Items.Container, Size = dim2(1, 0, 0, 26), BackgroundTransparency = 1, Text = "" })
     
-    Items.Checkbox = External:Create("Frame", { 
-        Parent = Items.Button, AnchorPoint = vec2(0, 0.5), Position = dim2(0, 6, 0.5, 0), Size = dim2(0, 14, 0, 14), 
-        BackgroundColor3 = themes.preset.element, BorderSizePixel = 0 
-    })
-    External:Create("UICorner", { Parent = Items.Checkbox, CornerRadius = dim(0, 3) })
-
     Items.Title = External:Create("TextLabel", { 
-        Parent = Items.Button, Position = dim2(0, 30, 0.5, 0), AnchorPoint = vec2(0, 0.5), Size = dim2(1, -26, 1, 0), 
+        Parent = Items.Button, Position = dim2(0, 0, 0.5, 0), AnchorPoint = vec2(0, 0.5), Size = dim2(1, -50, 1, 0), 
         BackgroundTransparency = 1, Text = Cfg.Name, TextColor3 = themes.preset.subtext, TextSize = 13, FontFace = Font.new("rbxassetid://12187365364", Enum.FontWeight.Medium), TextXAlignment = Enum.TextXAlignment.Left 
     })
+
+    -- iOS Style Pill Switch
+    Items.Pill = External:Create("Frame", { 
+        Parent = Items.Button, AnchorPoint = vec2(1, 0.5), Position = dim2(1, 0, 0.5, 0), Size = dim2(0, 36, 0, 20), 
+        BackgroundColor3 = themes.preset.element, BorderSizePixel = 0 
+    })
+    External:Create("UICorner", { Parent = Items.Pill, CornerRadius = dim(1, 0) })
+    External:Themify(External:Create("UIStroke", { Parent = Items.Pill, Color = themes.preset.outline, Thickness = 1 }), "outline", "Color")
+
+    Items.Knob = External:Create("Frame", {
+        Parent = Items.Pill, AnchorPoint = vec2(0, 0.5), Position = dim2(0, 2, 0.5, 0), Size = dim2(0, 14, 0, 14),
+        BackgroundColor3 = themes.preset.subtext, BorderSizePixel = 0
+    })
+    External:Create("UICorner", { Parent = Items.Knob, CornerRadius = dim(1, 0) })
 
     local State = false
     function Cfg.set(bool)
         State = bool
-        External:Tween(Items.Checkbox, {BackgroundColor3 = State and themes.preset.accent or themes.preset.element}, TweenInfo.new(0.2))
+        External:Tween(Items.Pill, {BackgroundColor3 = State and themes.preset.accent or themes.preset.element}, TweenInfo.new(0.25))
+        External:Tween(Items.Knob, {Position = State and dim2(1, -16, 0.5, 0) or dim2(0, 2, 0.5, 0), BackgroundColor3 = State and themes.preset.text or themes.preset.subtext}, TweenInfo.new(0.25, Enum.EasingStyle.Quint, Enum.EasingDirection.Out))
         External:Tween(Items.Title, {TextColor3 = State and themes.preset.text or themes.preset.subtext}, TweenInfo.new(0.2))
+        
         if Cfg.Flag then Flags[Cfg.Flag] = State end
         Cfg.Callback(State)
     end
 
     table.insert(External.DynamicTheming, function()
-        Items.Checkbox.BackgroundColor3 = State and themes.preset.accent or themes.preset.element
+        Items.Pill.BackgroundColor3 = State and themes.preset.accent or themes.preset.element
         Items.Title.TextColor3 = State and themes.preset.text or themes.preset.subtext
+        Items.Knob.BackgroundColor3 = State and themes.preset.text or themes.preset.subtext
     end)
 
     Items.Button.MouseButton1Click:Connect(function() Cfg.set(not State) end)
@@ -537,18 +557,19 @@ function External:Button(properties)
     local Items = Cfg.Items
 
     Items.Button = External:Create("TextButton", { 
-        Parent = self.Items.Container, Size = dim2(1, 0, 0, 30), BackgroundColor3 = themes.preset.element, 
-        Text = Cfg.Name, TextColor3 = themes.preset.subtext, TextSize = 13, FontFace = Font.new("rbxassetid://12187365364", Enum.FontWeight.Medium), AutoButtonColor = false 
+        Parent = self.Items.Container, Size = dim2(1, 0, 0, 34), BackgroundColor3 = themes.preset.element, 
+        Text = Cfg.Name, TextColor3 = themes.preset.text, TextSize = 13, FontFace = Font.new("rbxassetid://12187365364", Enum.FontWeight.SemiBold), AutoButtonColor = false 
     })
     External:Themify(Items.Button, "element", "BackgroundColor3")
-    External:Themify(Items.Button, "subtext", "TextColor3")
+    External:Themify(Items.Button, "text", "TextColor3")
 
-    External:Create("UICorner", { Parent = Items.Button, CornerRadius = dim(0, 4) })
+    External:Create("UICorner", { Parent = Items.Button, CornerRadius = dim(0, 6) })
+    External:Themify(External:Create("UIStroke", { Parent = Items.Button, Color = themes.preset.outline, Thickness = 1 }), "outline", "Color")
 
     Items.Button.MouseButton1Click:Connect(function()
-        External:Tween(Items.Button, {BackgroundColor3 = themes.preset.outline, TextColor3 = themes.preset.text}, TweenInfo.new(0.1))
+        External:Tween(Items.Button, {BackgroundColor3 = themes.preset.outline}, TweenInfo.new(0.1))
         task.wait(0.1)
-        External:Tween(Items.Button, {BackgroundColor3 = themes.preset.element, TextColor3 = themes.preset.subtext}, TweenInfo.new(0.2))
+        External:Tween(Items.Button, {BackgroundColor3 = themes.preset.element}, TweenInfo.new(0.2))
         Cfg.Callback()
     end)
     return setmetatable(Cfg, External)
@@ -568,24 +589,25 @@ function External:Slider(properties)
     }
     local Items = Cfg.Items
 
-    Items.Container = External:Create("Frame", { Parent = self.Items.Container, Size = dim2(1, 0, 0, 38), BackgroundTransparency = 1 })
-    Items.Title = External:Create("TextLabel", { Parent = Items.Container, Size = dim2(1, 0, 0, 20), BackgroundTransparency = 1, Text = "  " .. Cfg.Name, TextColor3 = themes.preset.subtext, TextSize = 13, FontFace = Font.new("rbxassetid://12187365364", Enum.FontWeight.Medium), TextXAlignment = Enum.TextXAlignment.Left })
+    Items.Container = External:Create("Frame", { Parent = self.Items.Container, Size = dim2(1, 0, 0, 42), BackgroundTransparency = 1 })
+    Items.Title = External:Create("TextLabel", { Parent = Items.Container, Size = dim2(1, 0, 0, 20), BackgroundTransparency = 1, Text = Cfg.Name, TextColor3 = themes.preset.subtext, TextSize = 13, FontFace = Font.new("rbxassetid://12187365364", Enum.FontWeight.Medium), TextXAlignment = Enum.TextXAlignment.Left })
     External:Themify(Items.Title, "subtext", "TextColor3")
 
-    Items.Val = External:Create("TextLabel", { Parent = Items.Container, Size = dim2(1, 0, 0, 20), BackgroundTransparency = 1, Text = tostring(Cfg.Default)..Cfg.Suffix, TextColor3 = themes.preset.subtext, TextSize = 13, FontFace = Font.new("rbxassetid://12187365364", Enum.FontWeight.Medium), TextXAlignment = Enum.TextXAlignment.Right })
-    External:Themify(Items.Val, "subtext", "TextColor3")
+    Items.Val = External:Create("TextLabel", { Parent = Items.Container, Size = dim2(1, 0, 0, 20), BackgroundTransparency = 1, Text = tostring(Cfg.Default)..Cfg.Suffix, TextColor3 = themes.preset.text, TextSize = 13, FontFace = Font.new("rbxassetid://12187365364", Enum.FontWeight.SemiBold), TextXAlignment = Enum.TextXAlignment.Right })
+    External:Themify(Items.Val, "text", "TextColor3")
 
-    Items.Track = External:Create("TextButton", { Parent = Items.Container, Position = dim2(0, 4, 0, 24), Size = dim2(1, -8, 0, 6), BackgroundColor3 = themes.preset.element, Text = "", AutoButtonColor = false })
+    Items.Track = External:Create("TextButton", { Parent = Items.Container, Position = dim2(0, 0, 0, 28), Size = dim2(1, 0, 0, 6), BackgroundColor3 = themes.preset.element, Text = "", AutoButtonColor = false })
     External:Themify(Items.Track, "element", "BackgroundColor3")
     External:Create("UICorner", { Parent = Items.Track, CornerRadius = dim(1, 0) })
+    External:Themify(External:Create("UIStroke", { Parent = Items.Track, Color = themes.preset.outline, Thickness = 1 }), "outline", "Color")
 
     Items.Fill = External:Create("Frame", { Parent = Items.Track, Size = dim2(0, 0, 1, 0), BackgroundColor3 = themes.preset.accent })
     External:Themify(Items.Fill, "accent", "BackgroundColor3")
     External:Create("UICorner", { Parent = Items.Fill, CornerRadius = dim(1, 0) })
     
-    Items.Knob = External:Create("Frame", { Parent = Items.Fill, AnchorPoint = vec2(0.5, 0.5), Position = dim2(1, 0, 0.5, 0), Size = dim2(0, 12, 0, 12), BackgroundColor3 = themes.preset.accent })
+    Items.Knob = External:Create("Frame", { Parent = Items.Fill, AnchorPoint = vec2(0.5, 0.5), Position = dim2(1, 0, 0.5, 0), Size = dim2(0, 14, 0, 14), BackgroundColor3 = themes.preset.text })
     External:Create("UICorner", { Parent = Items.Knob, CornerRadius = dim(1, 0) })
-    External:Themify(Items.Knob, "accent", "BackgroundColor3")
+    External:Themify(Items.Knob, "text", "BackgroundColor3")
 
     local Value = Cfg.Default
     function Cfg.set(val)
@@ -626,10 +648,11 @@ function External:Textbox(properties)
     }
     local Items = Cfg.Items
 
-    Items.Container = External:Create("Frame", { Parent = self.Items.Container, Size = dim2(1, 0, 0, 32), BackgroundTransparency = 1 })
+    Items.Container = External:Create("Frame", { Parent = self.Items.Container, Size = dim2(1, 0, 0, 36), BackgroundTransparency = 1 })
     Items.Bg = External:Create("Frame", { Parent = Items.Container, Size = dim2(1, 0, 1, 0), BackgroundColor3 = themes.preset.element })
     External:Themify(Items.Bg, "element", "BackgroundColor3")
-    External:Create("UICorner", { Parent = Items.Bg, CornerRadius = dim(0, 4) })
+    External:Create("UICorner", { Parent = Items.Bg, CornerRadius = dim(0, 6) })
+    External:Themify(External:Create("UIStroke", { Parent = Items.Bg, Color = themes.preset.outline, Thickness = 1 }), "outline", "Color")
 
     Items.Input = External:Create("TextBox", { 
         Parent = Items.Bg, Position = dim2(0, 12, 0, 0), Size = dim2(1, -24, 1, 0), BackgroundTransparency = 1, 
@@ -652,7 +675,6 @@ function External:Textbox(properties)
     return setmetatable(Cfg, External)
 end
 
--- animated dropdown lolz 
 function External:Dropdown(properties)
     local Cfg = { 
         Name = properties.Name or properties.name or "Dropdown", 
@@ -664,32 +686,34 @@ function External:Dropdown(properties)
     }
     local Items = Cfg.Items
     
-    Items.Container = External:Create("Frame", { Parent = self.Items.Container, Size = dim2(1, 0, 0, 46), BackgroundTransparency = 1 })
-    Items.Title = External:Create("TextLabel", { Parent = Items.Container, Size = dim2(1, 0, 0, 16), BackgroundTransparency = 1, Text = "  " .. Cfg.Name, TextColor3 = themes.preset.subtext, TextSize = 13, FontFace = Font.new("rbxassetid://12187365364", Enum.FontWeight.Medium), TextXAlignment = Enum.TextXAlignment.Left })
+    Items.Container = External:Create("Frame", { Parent = self.Items.Container, Size = dim2(1, 0, 0, 52), BackgroundTransparency = 1 })
+    Items.Title = External:Create("TextLabel", { Parent = Items.Container, Size = dim2(1, 0, 0, 18), BackgroundTransparency = 1, Text = Cfg.Name, TextColor3 = themes.preset.subtext, TextSize = 13, FontFace = Font.new("rbxassetid://12187365364", Enum.FontWeight.Medium), TextXAlignment = Enum.TextXAlignment.Left })
     External:Themify(Items.Title, "subtext", "TextColor3")
 
     Items.Main = External:Create("TextButton", { 
-        Parent = Items.Container, Position = dim2(0, 0, 0, 20), Size = dim2(1, 0, 0, 26), 
+        Parent = Items.Container, Position = dim2(0, 0, 0, 22), Size = dim2(1, 0, 0, 30), 
         BackgroundColor3 = themes.preset.element, Text = "", AutoButtonColor = false 
     })
     External:Themify(Items.Main, "element", "BackgroundColor3")
-    External:Create("UICorner", { Parent = Items.Main, CornerRadius = dim(0, 4) })
+    External:Create("UICorner", { Parent = Items.Main, CornerRadius = dim(0, 6) })
+    External:Themify(External:Create("UIStroke", { Parent = Items.Main, Color = themes.preset.outline, Thickness = 1 }), "outline", "Color")
 
-    Items.SelectedText = External:Create("TextLabel", { Parent = Items.Main, Position = dim2(0, 12, 0, 0), Size = dim2(1, -24, 1, 0), BackgroundTransparency = 1, Text = "...", TextColor3 = themes.preset.subtext, TextSize = 13, FontFace = Font.new("rbxassetid://12187365364", Enum.FontWeight.Medium), TextXAlignment = Enum.TextXAlignment.Left })
-    External:Themify(Items.SelectedText, "subtext", "TextColor3")
+    Items.SelectedText = External:Create("TextLabel", { Parent = Items.Main, Position = dim2(0, 12, 0, 0), Size = dim2(1, -24, 1, 0), BackgroundTransparency = 1, Text = "...", TextColor3 = themes.preset.text, TextSize = 13, FontFace = Font.new("rbxassetid://12187365364", Enum.FontWeight.SemiBold), TextXAlignment = Enum.TextXAlignment.Left })
+    External:Themify(Items.SelectedText, "text", "TextColor3")
     
-    Items.Icon = External:Create("ImageLabel", { Parent = Items.Main, Position = dim2(1, -20, 0.5, 0), AnchorPoint = vec2(0, 0.5), Size = dim2(0, 10, 0, 10), BackgroundTransparency = 1, Image = "rbxassetid://11293977610", ImageColor3 = themes.preset.subtext, Rotation = 180 })
+    Items.Icon = External:Create("ImageLabel", { Parent = Items.Main, Position = dim2(1, -20, 0.5, 0), AnchorPoint = vec2(0, 0.5), Size = dim2(0, 12, 0, 12), BackgroundTransparency = 1, Image = "rbxassetid://11293977610", ImageColor3 = themes.preset.subtext, Rotation = 180 })
 
     Items.DropFrame = External:Create("Frame", { 
         Parent = External.Gui, Size = dim2(1, 0, 0, 0), Position = dim2(0, 0, 0, 0), 
         BackgroundColor3 = themes.preset.element, Visible = false, ZIndex = 200, ClipsDescendants = true 
     })
     External:Themify(Items.DropFrame, "element", "BackgroundColor3")
-    External:Create("UICorner", { Parent = Items.DropFrame, CornerRadius = dim(0, 4) })
+    External:Create("UICorner", { Parent = Items.DropFrame, CornerRadius = dim(0, 6) })
+    External:Themify(External:Create("UIStroke", { Parent = Items.DropFrame, Color = themes.preset.outline, Thickness = 1 }), "outline", "Color")
 
     Items.Scroll = External:Create("ScrollingFrame", { 
         Parent = Items.DropFrame, Size = dim2(1, 0, 1, -8), Position = dim2(0, 0, 0, 4), 
-        BackgroundTransparency = 1, ScrollBarThickness = 0, BorderSizePixel = 0, ZIndex = 201 
+        BackgroundTransparency = 1, ScrollBarThickness = 2, ScrollBarImageColor3 = themes.preset.subtext, BorderSizePixel = 0, ZIndex = 201 
     })
     External:Create("UIListLayout", { Parent = Items.Scroll, SortOrder = Enum.SortOrder.LayoutOrder })
 
@@ -699,8 +723,8 @@ function External:Dropdown(properties)
     function Cfg.UpdatePosition()
         local absPos = Items.Main.AbsolutePosition
         local absSize = Items.Main.AbsoluteSize
-        Items.DropFrame.Position = dim2(0, absPos.X, 0, absPos.Y + absSize.Y + 4)
-        Items.Scroll.CanvasSize = dim2(0, 0, 0, #Cfg.Options * 24)
+        Items.DropFrame.Position = dim2(0, absPos.X, 0, absPos.Y + absSize.Y + 6)
+        Items.Scroll.CanvasSize = dim2(0, 0, 0, #Cfg.Options * 28)
     end
 
     local function ToggleDropdown()
@@ -712,7 +736,7 @@ function External:Dropdown(properties)
             Items.DropFrame.Visible = true
             Cfg.UpdatePosition()
             Items.DropFrame.Size = dim2(0, Items.Main.AbsoluteSize.X, 0, 0)
-            local targetHeight = math.clamp(#Cfg.Options * 24 + 8, 0, 150)
+            local targetHeight = math.clamp(#Cfg.Options * 28 + 8, 0, 180)
             External:Tween(Items.Icon, {Rotation = 0}, TweenInfo.new(0.3))
             local tw = External:Tween(Items.DropFrame, {Size = dim2(0, Items.Main.AbsoluteSize.X, 0, targetHeight)}, TweenInfo.new(0.3, Enum.EasingStyle.Quint, Enum.EasingDirection.Out))
             tw.Completed:Wait()
@@ -748,12 +772,16 @@ function External:Dropdown(properties)
         table.clear(OptionBtns)
         for _, opt in ipairs(Cfg.Options) do
             local btn = External:Create("TextButton", { 
-                Parent = Items.Scroll, Size = dim2(1, 0, 0, 24), BackgroundTransparency = 1, 
+                Parent = Items.Scroll, Size = dim2(1, 0, 0, 28), BackgroundTransparency = 1, 
                 Text = "   " .. tostring(opt), TextColor3 = themes.preset.subtext, TextSize = 13, 
                 FontFace = Font.new("rbxassetid://12187365364", Enum.FontWeight.Medium), TextXAlignment = Enum.TextXAlignment.Left, ZIndex = 202 
             })
             External:Themify(btn, "subtext", "TextColor3")
             btn.MouseButton1Click:Connect(function() Cfg.set(opt); ToggleDropdown() end)
+            
+            btn.MouseEnter:Connect(function() External:Tween(btn, {TextColor3 = themes.preset.text}, TweenInfo.new(0.2)) end)
+            btn.MouseLeave:Connect(function() External:Tween(btn, {TextColor3 = themes.preset.subtext}, TweenInfo.new(0.2)) end)
+
             table.insert(OptionBtns, btn)
         end
     end
@@ -770,7 +798,7 @@ function External:Dropdown(properties)
 
     RunService.RenderStepped:Connect(function() 
         if Open or isTweening then 
-            Items.DropFrame.Position = dim2(0, Items.Main.AbsolutePosition.X, 0, Items.Main.AbsolutePosition.Y + Items.Main.AbsoluteSize.Y + 4)
+            Items.DropFrame.Position = dim2(0, Items.Main.AbsolutePosition.X, 0, Items.Main.AbsolutePosition.Y + Items.Main.AbsoluteSize.Y + 6)
         end 
     end)
     return setmetatable(Cfg, External)
@@ -784,18 +812,17 @@ function External:Label(properties)
     }
     local Items = Cfg.Items
     Items.Title = External:Create("TextLabel", { 
-        Parent = self.Items.Container, Size = dim2(1, 0, 0, Cfg.Wrapped and 26 or 18), BackgroundTransparency = 1, 
-        Text = "  " .. Cfg.Name, TextColor3 = themes.preset.subtext, TextSize = 13, TextWrapped = Cfg.Wrapped, 
+        Parent = self.Items.Container, Size = dim2(1, 0, 0, Cfg.Wrapped and 26 or 20), BackgroundTransparency = 1, 
+        Text = Cfg.Name, TextColor3 = themes.preset.subtext, TextSize = 13, TextWrapped = Cfg.Wrapped, 
         FontFace = Font.new("rbxassetid://12187365364", Enum.FontWeight.Medium), TextXAlignment = Enum.TextXAlignment.Left, 
         TextYAlignment = Cfg.Wrapped and Enum.TextYAlignment.Top or Enum.TextYAlignment.Center 
     })
     External:Themify(Items.Title, "subtext", "TextColor3")
     
-    function Cfg.set(val) Items.Title.Text = "  " .. tostring(val) end
+    function Cfg.set(val) Items.Title.Text = tostring(val) end
     return setmetatable(Cfg, External)
 end
 
--- animated colorpicker so sexy 
 function External:Colorpicker(properties)
     local Cfg = { 
         Color = properties.Color or properties.color or rgb(255, 255, 255), 
@@ -805,30 +832,32 @@ function External:Colorpicker(properties)
     }
     local Items = Cfg.Items
 
-    local btn = External:Create("TextButton", { Parent = self.Items.Title or self.Items.Button or self.Items.Container, AnchorPoint = vec2(1, 0.5), Position = dim2(1, -6, 0.5, 0), Size = dim2(0, 30, 0, 14), BackgroundColor3 = Cfg.Color, Text = "" })
-    External:Create("UICorner", {Parent = btn, CornerRadius = dim(0, 4)})
+    local btn = External:Create("TextButton", { Parent = self.Items.Title or self.Items.Button or self.Items.Container, AnchorPoint = vec2(1, 0.5), Position = dim2(1, 0, 0.5, 0), Size = dim2(0, 36, 0, 18), BackgroundColor3 = Cfg.Color, Text = "" })
+    External:Create("UICorner", {Parent = btn, CornerRadius = dim(0, 6)})
+    External:Themify(External:Create("UIStroke", { Parent = btn, Color = themes.preset.outline, Thickness = 1 }), "outline", "Color")
 
     local h, s, v = Color3.toHSV(Cfg.Color)
     
-    -- Added ClipsDescendants to allow smooth tweening vertically
-    Items.DropFrame = External:Create("Frame", { Parent = External.Gui, Size = dim2(0, 150, 0, 0), BackgroundColor3 = themes.preset.element, Visible = false, ZIndex = 200, ClipsDescendants = true })
+    Items.DropFrame = External:Create("Frame", { Parent = External.Gui, Size = dim2(0, 160, 0, 0), BackgroundColor3 = themes.preset.element, Visible = false, ZIndex = 200, ClipsDescendants = true })
     External:Themify(Items.DropFrame, "element", "BackgroundColor3")
-    External:Create("UICorner", { Parent = Items.DropFrame, CornerRadius = dim(0, 4) })
+    External:Create("UICorner", { Parent = Items.DropFrame, CornerRadius = dim(0, 8) })
+    External:Themify(External:Create("UIStroke", { Parent = Items.DropFrame, Color = themes.preset.outline, Thickness = 1 }), "outline", "Color")
 
-    Items.SVMap = External:Create("TextButton", { Parent = Items.DropFrame, Position = dim2(0, 8, 0, 8), Size = dim2(1, -16, 1, -38), AutoButtonColor = false, Text = "", BackgroundColor3 = Color3.fromHSV(h, 1, 1), ZIndex = 201 })
-    External:Create("UICorner", { Parent = Items.SVMap, CornerRadius = dim(0, 3) })
+    Items.SVMap = External:Create("TextButton", { Parent = Items.DropFrame, Position = dim2(0, 10, 0, 10), Size = dim2(1, -20, 1, -40), AutoButtonColor = false, Text = "", BackgroundColor3 = Color3.fromHSV(h, 1, 1), ZIndex = 201 })
+    External:Create("UICorner", { Parent = Items.SVMap, CornerRadius = dim(0, 4) })
     Items.SVImage = External:Create("ImageLabel", { Parent = Items.SVMap, Size = dim2(1, 0, 1, 0), Image = "rbxassetid://4155801252", BackgroundTransparency = 1, BorderSizePixel = 0, ZIndex = 202 })
-    External:Create("UICorner", { Parent = Items.SVImage, CornerRadius = dim(0, 3) })
+    External:Create("UICorner", { Parent = Items.SVImage, CornerRadius = dim(0, 4) })
     
-    Items.SVKnob = External:Create("Frame", { Parent = Items.SVMap, AnchorPoint = vec2(0.5, 0.5), Size = dim2(0, 4, 0, 4), BackgroundColor3 = rgb(255,255,255), ZIndex = 203 })
+    Items.SVKnob = External:Create("Frame", { Parent = Items.SVMap, AnchorPoint = vec2(0.5, 0.5), Size = dim2(0, 6, 0, 6), BackgroundColor3 = rgb(255,255,255), ZIndex = 203 })
     External:Create("UICorner", { Parent = Items.SVKnob, CornerRadius = dim(1, 0) })
     External:Create("UIStroke", { Parent = Items.SVKnob, Color = rgb(0,0,0) })
 
-    Items.HueBar = External:Create("TextButton", { Parent = Items.DropFrame, Position = dim2(0, 8, 1, -22), Size = dim2(1, -16, 0, 14), AutoButtonColor = false, Text = "", BorderSizePixel = 0, BackgroundColor3 = rgb(255, 255, 255), ZIndex = 201 })
-    External:Create("UICorner", { Parent = Items.HueBar, CornerRadius = dim(0, 3) })
+    Items.HueBar = External:Create("TextButton", { Parent = Items.DropFrame, Position = dim2(0, 10, 1, -22), Size = dim2(1, -20, 0, 12), AutoButtonColor = false, Text = "", BorderSizePixel = 0, BackgroundColor3 = rgb(255, 255, 255), ZIndex = 201 })
+    External:Create("UICorner", { Parent = Items.HueBar, CornerRadius = dim(0, 4) })
     External:Create("UIGradient", { Parent = Items.HueBar, Color = ColorSequence.new({ColorSequenceKeypoint.new(0, rgb(255,0,0)), ColorSequenceKeypoint.new(0.167, rgb(255,0,255)), ColorSequenceKeypoint.new(0.333, rgb(0,0,255)), ColorSequenceKeypoint.new(0.5, rgb(0,255,255)), ColorSequenceKeypoint.new(0.667, rgb(0,255,0)), ColorSequenceKeypoint.new(0.833, rgb(255,255,0)), ColorSequenceKeypoint.new(1, rgb(255,0,0))}) })
     
-    Items.HueKnob = External:Create("Frame", { Parent = Items.HueBar, AnchorPoint = vec2(0.5, 0.5), Size = dim2(0, 2, 1, 4), BackgroundColor3 = rgb(255,255,255), ZIndex = 203 })
+    Items.HueKnob = External:Create("Frame", { Parent = Items.HueBar, AnchorPoint = vec2(0.5, 0.5), Size = dim2(0, 4, 1, 4), BackgroundColor3 = rgb(255,255,255), ZIndex = 203 })
+    External:Create("UICorner", { Parent = Items.HueKnob, CornerRadius = dim(0, 2) })
     External:Create("UIStroke", { Parent = Items.HueKnob, Color = rgb(0,0,0) })
 
     local Open = false
@@ -841,10 +870,10 @@ function External:Colorpicker(properties)
         
         if Open then
             Items.DropFrame.Visible = true
-            local tw = External:Tween(Items.DropFrame, {Size = dim2(0, 150, 0, 140)}, TweenInfo.new(0.3, Enum.EasingStyle.Quint, Enum.EasingDirection.Out))
+            local tw = External:Tween(Items.DropFrame, {Size = dim2(0, 160, 0, 150)}, TweenInfo.new(0.3, Enum.EasingStyle.Quint, Enum.EasingDirection.Out))
             tw.Completed:Wait()
         else
-            local tw = External:Tween(Items.DropFrame, {Size = dim2(0, 150, 0, 0)}, TweenInfo.new(0.3, Enum.EasingStyle.Quint, Enum.EasingDirection.Out))
+            local tw = External:Tween(Items.DropFrame, {Size = dim2(0, 160, 0, 0)}, TweenInfo.new(0.3, Enum.EasingStyle.Quint, Enum.EasingDirection.Out))
             tw.Completed:Wait()
             Items.DropFrame.Visible = false
         end
@@ -856,7 +885,7 @@ function External:Colorpicker(properties)
         if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
             if Open and not isTweening then
                 local mx, my = input.Position.X, input.Position.Y
-                local p0, s0 = Items.DropFrame.AbsolutePosition, dim2(0, 150, 0, 140)
+                local p0, s0 = Items.DropFrame.AbsolutePosition, dim2(0, 160, 0, 150)
                 local p1, s1 = btn.AbsolutePosition, btn.AbsoluteSize
                 if not (mx >= p0.X and mx <= p0.X + s0.X.Offset and my >= p0.Y and my <= p0.Y + s0.Y.Offset) and not (mx >= p1.X and mx <= p1.X + s1.X and my >= p1.Y and my <= p1.Y + s1.Y) then
                     Toggle()
@@ -896,7 +925,7 @@ function External:Colorpicker(properties)
     end)
 
     RunService.RenderStepped:Connect(function()
-        if Open or isTweening then Items.DropFrame.Position = dim2(0, btn.AbsolutePosition.X - 150 + btn.AbsoluteSize.X, 0, btn.AbsolutePosition.Y + btn.AbsoluteSize.Y + 2) end
+        if Open or isTweening then Items.DropFrame.Position = dim2(0, btn.AbsolutePosition.X - 160 + btn.AbsoluteSize.X, 0, btn.AbsolutePosition.Y + btn.AbsoluteSize.Y + 4) end
     end)
     
     Items.SVKnob.Position = dim2(s, 0, 1 - v, 0)
@@ -915,11 +944,12 @@ function External:Keybind(properties)
         Callback = properties.Callback or properties.callback or function() end, 
         Items = {} 
     }
-    local KeyBtn = External:Create("TextButton", { Parent = self.Items.Title or self.Items.Container, AnchorPoint = vec2(1, 0.5), Position = dim2(1, -6, 0.5, 0), Size = dim2(0, 40, 0, 16), BackgroundColor3 = themes.preset.element, TextColor3 = themes.preset.subtext, Text = Keys[Cfg.Default] or "None", TextSize = 12, FontFace = Font.new("rbxassetid://12187365364", Enum.FontWeight.Medium), })
+    local KeyBtn = External:Create("TextButton", { Parent = self.Items.Title or self.Items.Container, AnchorPoint = vec2(1, 0.5), Position = dim2(1, 0, 0.5, 0), Size = dim2(0, 46, 0, 20), BackgroundColor3 = themes.preset.element, TextColor3 = themes.preset.text, Text = Keys[Cfg.Default] or "None", TextSize = 12, FontFace = Font.new("rbxassetid://12187365364", Enum.FontWeight.SemiBold) })
     External:Themify(KeyBtn, "element", "BackgroundColor3")
-    External:Themify(KeyBtn, "subtext", "TextColor3")
+    External:Themify(KeyBtn, "text", "TextColor3")
 
-    External:Create("UICorner", {Parent = KeyBtn, CornerRadius = dim(0, 4)})
+    External:Create("UICorner", {Parent = KeyBtn, CornerRadius = dim(0, 6)})
+    External:Themify(External:Create("UIStroke", { Parent = KeyBtn, Color = themes.preset.outline, Thickness = 1 }), "outline", "Color")
     
     local binding = false
     KeyBtn.MouseButton1Click:Connect(function() binding = true; KeyBtn.Text = "..." end)
@@ -954,9 +984,9 @@ end
 function Notifications:RefreshNotifications()
     local offset = 50
     for _, v in ipairs(Notifications.Notifs) do
-        local ySize = math.max(v.AbsoluteSize.Y, 36)
+        local ySize = math.max(v.AbsoluteSize.Y, 40)
         External:Tween(v, {Position = dim_offset(20, offset)}, TweenInfo.new(0.4, Enum.EasingStyle.Quint, Enum.EasingDirection.Out))
-        offset += (ySize + 10)
+        offset += (ySize + 12)
     end
 end
 
@@ -968,19 +998,20 @@ function Notifications:Create(properties)
     }
     local Items = Cfg.Items
    
-    Items.Outline = External:Create("Frame", { Parent = External.Gui; Position = dim_offset(-500, 50); Size = dim2(0, 300, 0, 0); AutomaticSize = Enum.AutomaticSize.Y; BackgroundColor3 = themes.preset.background; BorderSizePixel = 0; ZIndex = 300, ClipsDescendants = true })
-    External:Themify(Items.Outline, "background", "BackgroundColor3")
-    External:Create("UICorner", { Parent = Items.Outline, CornerRadius = dim(0, 4) })
+    Items.Outline = External:Create("Frame", { Parent = External.Gui; Position = dim_offset(-500, 50); Size = dim2(0, 320, 0, 0); AutomaticSize = Enum.AutomaticSize.Y; BackgroundColor3 = themes.preset.section; BorderSizePixel = 0; ZIndex = 300, ClipsDescendants = true })
+    External:Themify(Items.Outline, "section", "BackgroundColor3")
+    External:Create("UICorner", { Parent = Items.Outline, CornerRadius = dim(0, 8) })
+    External:Themify(External:Create("UIStroke", { Parent = Items.Outline, Color = themes.preset.outline, Thickness = 1 }), "outline", "Color")
    
     Items.Name = External:Create("TextLabel", {
         Parent = Items.Outline; Text = Cfg.Name; TextColor3 = themes.preset.text; FontFace = Font.new("rbxassetid://12187365364", Enum.FontWeight.Medium);
-        BackgroundTransparency = 1; Size = dim2(1, 0, 1, 0); AutomaticSize = Enum.AutomaticSize.None; TextWrapped = true; TextSize = 13; TextXAlignment = Enum.TextXAlignment.Left; ZIndex = 302
+        BackgroundTransparency = 1; Size = dim2(1, 0, 1, 0); AutomaticSize = Enum.AutomaticSize.None; TextWrapped = true; TextSize = 14; TextXAlignment = Enum.TextXAlignment.Left; ZIndex = 302
     })
     External:Themify(Items.Name, "text", "TextColor3")
    
-    External:Create("UIPadding", { Parent = Items.Name; PaddingTop = dim(0, 10); PaddingBottom = dim(0, 10); PaddingRight = dim(0, 12); PaddingLeft = dim(0, 12); })
+    External:Create("UIPadding", { Parent = Items.Name; PaddingTop = dim(0, 12); PaddingBottom = dim(0, 12); PaddingRight = dim(0, 16); PaddingLeft = dim(0, 16); })
    
-    Items.TimeBar = External:Create("Frame", { Parent = Items.Outline, AnchorPoint = vec2(0, 1), Position = dim2(0, 0, 1, 0), Size = dim2(1, 0, 0, 2), BackgroundColor3 = themes.preset.accent, BorderSizePixel = 0, ZIndex = 303 })
+    Items.TimeBar = External:Create("Frame", { Parent = Items.Outline, AnchorPoint = vec2(0, 1), Position = dim2(0, 0, 1, 0), Size = dim2(1, 0, 0, 3), BackgroundColor3 = themes.preset.accent, BorderSizePixel = 0, ZIndex = 303 })
     External:Themify(Items.TimeBar, "accent", "BackgroundColor3")
     table.insert(Notifications.Notifs, Items.Outline)
    
@@ -988,7 +1019,7 @@ function Notifications:Create(properties)
         RunService.RenderStepped:Wait()
         Items.Outline.Position = dim_offset(-Items.Outline.AbsoluteSize.X - 20, 50)
         Notifications:RefreshNotifications()
-        External:Tween(Items.TimeBar, {Size = dim2(0, 0, 0, 2)}, TweenInfo.new(Cfg.Lifetime, Enum.EasingStyle.Linear))
+        External:Tween(Items.TimeBar, {Size = dim2(0, 0, 0, 3)}, TweenInfo.new(Cfg.Lifetime, Enum.EasingStyle.Linear))
         task.wait(Cfg.Lifetime)
         External:Tween(Items.Outline, {Position = dim_offset(-Items.Outline.AbsoluteSize.X - 50, Items.Outline.Position.Y.Offset)}, TweenInfo.new(0.4, Enum.EasingStyle.Quint, Enum.EasingDirection.In))
         task.wait(0.4)
@@ -1000,7 +1031,7 @@ function Notifications:Create(properties)
     end)
 end
 
--- save and load stuff yes
+-- save and load
 function External:GetConfig()
     local g = {}
     for Idx, Value in Flags do g[Idx] = Value end
@@ -1016,7 +1047,7 @@ function External:LoadConfig(JSON)
     end
 end
 
--- configs and server menu 
+-- configs and server menu
 local ConfigHolder
 function External:UpdateConfigList()
     if not ConfigHolder then return end
@@ -1031,7 +1062,7 @@ end
 function External:Configs(window)
     local Text
 
-    local Tab = window:Tab({ Name = "", Hidden = true })
+    local Tab = window:Tab({ Name = "Settings", Hidden = true })
     window.SettingsTabOpen = Tab.OpenTab
 
     local Section = Tab:Section({Name = "Configs", Side = "Left"})
@@ -1093,7 +1124,7 @@ function External:Configs(window)
         Default = Enum.KeyCode.RightShift
     })
 
-task.delay(1, function() window.Tweening = false end)
+    task.delay(1, function() window.Tweening = false end)
 
     local ServerSection = Tab:Section({Name = "Server", Side = "Right"})
 
